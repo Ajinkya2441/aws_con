@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import bcrypt  # <-- Added for password hashing
 
 # ----------------- CONFIG -----------------
 DATABASE_URL = "mysql+pymysql://user:ajinkya@localhost/awsc"
@@ -41,7 +42,10 @@ def signup(username: str = Form(...), password: str = Form(...)):
         if user:
             return JSONResponse(content={"success": False, "message": "Username already exists"}, status_code=400)
 
-        new_user = User(username=username, password=password)
+        # Hash the password before storing
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+        new_user = User(username=username, password=hashed_password.decode('utf-8'))
         db.add(new_user)
         db.commit()
         return JSONResponse(content={"success": True, "message": "User registered successfully"})
@@ -55,8 +59,8 @@ def signup(username: str = Form(...), password: str = Form(...)):
 def login(username: str = Form(...), password: str = Form(...)):
     db = SessionLocal()
     try:
-        user = db.query(User).filter(User.username == username, User.password == password).first()
-        if user:
+        user = db.query(User).filter(User.username == username).first()
+        if user and bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
             return JSONResponse(content={"success": True, "message": "Login successful"})
         return JSONResponse(content={"success": False, "message": "Invalid credentials"}, status_code=401)
     except Exception as e:
