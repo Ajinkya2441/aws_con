@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 import bcrypt  # <-- Added for password hashing
 
 # ----------------- CONFIG -----------------
-DATABASE_URL = "mysql+pymysql://user:ajinkya@localhost/awsc"
+DATABASE_URL = "mysql+pymysql://root:ajinkya@localhost/auth_db"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
